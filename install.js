@@ -11,6 +11,25 @@ const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, '.env');
 const envExamplePath = path.resolve(__dirname, '.env.example');
 const serverPath = path.resolve(__dirname, 'dist/server.js');
+const mcpServerName = 'ubersuggest_node';
+
+function getStdioConfig() {
+  return {
+    command: 'node',
+    args: [
+      '--experimental-sqlite',
+      `--env-file=${envPath}`,
+      serverPath,
+      '--stdio'
+    ]
+  };
+}
+
+function getCodexTomlBlock() {
+  const config = getStdioConfig();
+  const args = config.args.map((arg) => JSON.stringify(arg)).join(', ');
+  return `[mcp_servers.${mcpServerName}]\nenabled = true\ncommand = ${JSON.stringify(config.command)}\nargs = [${args}]`;
+}
 
 // Ensure the server has been built
 if (!fs.existsSync(serverPath)) {
@@ -52,15 +71,7 @@ async function installClaudeDesktop() {
     }
 
     config.mcpServers = config.mcpServers || {};
-    config.mcpServers['ubersuggest-node'] = {
-      command: 'node',
-      args: [
-        '--experimental-sqlite',
-        `--env-file=${envPath}`,
-        serverPath,
-        '--stdio'
-      ]
-    };
+    config.mcpServers['ubersuggest-node'] = getStdioConfig();
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
     console.log(`\x1b[32m✅ Berhasil didaftarkan di Claude Desktop!\x1b[0m`);
@@ -90,13 +101,7 @@ async function installClaudeCode() {
 
     config.projects[cwd].mcpServers['ubersuggest-node'] = {
       type: 'stdio',
-      command: 'node',
-      args: [
-        '--experimental-sqlite',
-        `--env-file=${envPath}`,
-        serverPath,
-        '--stdio'
-      ]
+      ...getStdioConfig()
     };
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
@@ -107,8 +112,28 @@ async function installClaudeCode() {
   }
 }
 
+async function installCodexCli() {
+  const configPath = path.join(os.homedir(), '.codex', 'config.toml');
+
+  try {
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    const block = getCodexTomlBlock();
+    const content = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : '';
+    const pattern = new RegExp(`(?:^|\\n)\\[mcp_servers\\.${mcpServerName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\][\\s\\S]*?(?=\\n\\[[^\\n]+\\]|$)`);
+    const nextContent = pattern.test(content)
+      ? content.replace(pattern, `\n${block}\n`)
+      : `${content.trimEnd()}${content.trimEnd() ? '\n\n' : ''}${block}\n`;
+
+    fs.writeFileSync(configPath, nextContent, 'utf8');
+    console.log(`\x1b[32m✅ Berhasil didaftarkan di Codex CLI!\x1b[0m`);
+    console.log(`File konfigurasi diperbarui: ${configPath}\n`);
+  } catch (err) {
+    console.error('\x1b[31m❌ Gagal mendaftarkan di Codex CLI:\x1b[0m', err.message);
+  }
+}
+
 function printCursorGuide() {
-  console.log('\x1b[36m=== Petunjuk Setup untuk Cursor / Codex ===\x1b[0m');
+  console.log('\x1b[36m=== Petunjuk Setup untuk Cursor ===\x1b[0m');
   console.log('1. Buka Cursor Settings -> Features -> MCP.');
   console.log('2. Klik "+ Add New MCP Server".');
   console.log('3. Isi formulir dengan nilai berikut:');
@@ -127,12 +152,13 @@ async function main() {
 
   console.log('Pilih client MCP yang ingin Anda konfigurasikan:');
   console.log(' [1] Claude Desktop App (Konfigurasi otomatis)');
-  console.log(' [2] Cursor / Codex IDE (Tampilkan petunjuk manual)');
+  console.log(' [2] Cursor IDE (Tampilkan petunjuk manual)');
   console.log(' [3] Claude Code CLI (Konfigurasi otomatis project saat ini)');
-  console.log(' [4] Semua (Konfigurasikan semua di atas)');
-  console.log(' [5] Keluar');
+  console.log(' [4] Codex CLI (Konfigurasi otomatis)');
+  console.log(' [5] Semua (Konfigurasikan semua di atas)');
+  console.log(' [6] Keluar');
 
-  const choice = await rl.question('\nMasukkan pilihan Anda (1-5): ');
+  const choice = await rl.question('\nMasukkan pilihan Anda (1-6): ');
   rl.close();
 
   console.log('');
@@ -148,11 +174,15 @@ async function main() {
       await installClaudeCode();
       break;
     case '4':
-      await installClaudeDesktop();
-      await installClaudeCode();
-      printCursorGuide();
+      await installCodexCli();
       break;
     case '5':
+      await installClaudeDesktop();
+      await installClaudeCode();
+      await installCodexCli();
+      printCursorGuide();
+      break;
+    case '6':
       console.log('Instalasi dibatalkan.');
       process.exit(0);
       break;

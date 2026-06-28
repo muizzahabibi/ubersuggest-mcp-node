@@ -49,7 +49,7 @@ async function main() {
     const npmBuild = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'], { cwd: targetDir, stdio: 'inherit' });
     if (npmBuild.status !== 0) throw new Error('npm run build failed');
 
-    console.log('\nMenjalankan konfigurasi interaktif (setup.js)...');
+    console.log('\nMenjalankan konfigurasi interaktif (install.js)...');
     const nodeSetup = spawnSync('node', ['install.js'], { cwd: targetDir, stdio: 'inherit' });
     if (nodeSetup.status !== 0) throw new Error('install.js failed');
 

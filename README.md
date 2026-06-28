@@ -24,7 +24,7 @@ Perintah ini akan secara otomatis:
 2. Mengkloning repositori ini secara otomatis.
 3. Memasang dependensi Node.js & browser Playwright (Chromium).
 4. Melakukan build TypeScript.
-5. Membuka wizard interaktif untuk mendaftarkan server ke klien MCP pilihan Anda (**Claude Desktop**, **Cursor (Codex)**, **Claude Code CLI**, atau semuanya!).
+5. Membuka wizard interaktif untuk mendaftarkan server ke klien MCP pilihan Anda (**Claude Desktop**, **Cursor**, **Claude Code CLI**, **Codex CLI**, atau semuanya!).
 
 Jika Anda sudah mengkloning repositori ini secara manual, Anda bisa menjalankan konfigurasi interaktif langsung dari dalam folder proyek dengan perintah:
 
@@ -57,7 +57,7 @@ Penyetelan manual pada berkas konfigurasi Claude Desktop (`claude_desktop_config
 ```
 *(Ganti `/PATH/TO/` dengan path absolut direktori proyek ini).*
 
-### 2. Cursor (Codex)
+### 2. Cursor
 
 1. Buka **Cursor Settings -> Features -> MCP**.
 2. Klik **+ Add New MCP Server**.
@@ -67,6 +67,19 @@ Penyetelan manual pada berkas konfigurasi Claude Desktop (`claude_desktop_config
    - **Command:** `node`
    - **Arguments:** `--experimental-sqlite --env-file="/PATH/TO/ubersuggest-mcp-node/.env" "/PATH/TO/ubersuggest-mcp-node/dist/server.js" --stdio`
 4. Klik **Save** dan restart Cursor.
+
+### 3. Codex CLI
+
+Wizard `npm run setup` dapat mengonfigurasi Codex otomatis. Jika ingin manual, tambahkan blok berikut ke `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.ubersuggest_node]
+enabled = true
+command = "node"
+args = ["--experimental-sqlite", "--env-file=/PATH/TO/ubersuggest-mcp-node/.env", "/PATH/TO/ubersuggest-mcp-node/dist/server.js", "--stdio"]
+```
+
+Gunakan nama `ubersuggest_node` agar bisa berjalan berdampingan dengan MCP Ubersuggest HTTP/remote lain.
 
 ---
 
