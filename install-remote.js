@@ -7,7 +7,7 @@ import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { spawnSync } from 'node:child_process';
 
-const REPO_URL = 'https://github.com/habibi/ubersuggest-mcp-node.git';
+const REPO_URL = 'https://github.com/muizzahabibi/ubersuggest-mcp-node.git';
 
 async function main() {
   console.log('\x1b[35m=== Ubersuggest MCP Node Remote Installer ===\x1b[0m\n');

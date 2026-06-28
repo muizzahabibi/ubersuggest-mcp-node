@@ -16,7 +16,7 @@ Implementasi standalone Model Context Protocol (MCP) server untuk Ubersuggest ya
 Anda dapat menginstal dan mengonfigurasikan server MCP ini secara otomatis langsung dari GitHub menggunakan satu baris perintah berikut:
 
 ```bash
-npx github:habibi/ubersuggest-mcp-node
+npx github:muizzahabibi/ubersuggest-mcp-node
 ```
 
 Perintah ini akan secara otomatis:
