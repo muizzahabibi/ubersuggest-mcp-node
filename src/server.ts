@@ -11,6 +11,8 @@ import { routeRequest } from './app/routes.js'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { CloudflareBindings } from './config/loadConfig.js'
+import type { AppContainer } from './app/container.js'
+import { ReconnectRequiredError } from './utils/errors.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -219,6 +221,60 @@ async function runStdioMcp() {
   container.logger.info('MCP Stdio server connected and listening')
 }
 
+// 6b. Auto-reconnect from cookies.json on startup
+async function autoReconnectIfNeeded(container: AppContainer) {
+  const principal = {
+    subject: 'local-user',
+    username: 'admin',
+    scopes: ['read', 'write'],
+  }
+  const sessionId = `user:${principal.subject}`
+  const context = container.createToolContext(principal)
+
+  // Check if existing session is still valid
+  try {
+    await context.services.subscription.getSubscription()
+    container.logger.info('Existing session is valid, skipping auto-reconnect')
+    return
+  } catch (error) {
+    if (!(error instanceof ReconnectRequiredError)) {
+      container.logger.warn('Session validation gave unexpected error, proceeding anyway', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return
+    }
+  }
+
+  // No valid session - try to auto-reconnect from cookies.json
+  const cookiesPath = join(appRoot, 'cookies.json')
+  if (!existsSync(cookiesPath)) {
+    container.logger.warn('No valid session and no cookies.json found. Run reconnect first or place cookies in cookies.json')
+    return
+  }
+
+  container.logger.info('Auto-reconnecting from cookies.json...')
+  try {
+    const raw = readFileSync(cookiesPath, 'utf-8')
+    const cookies = JSON.parse(raw)
+    const job = await context.reconnectCoordinator.startManualReconnect(
+      principal.subject,
+      sessionId,
+      {
+        authMode: 'cookies',
+        cookies: {
+          raw: JSON.stringify(cookies),
+          format: 'json',
+        },
+      },
+    )
+    container.logger.info('Auto-reconnect completed', { status: job.status, jobId: job.jobId })
+  } catch (error) {
+    container.logger.error('Auto-reconnect from cookies.json failed, tools will require manual reconnect', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
 // 7. Async Main Entry Point
 async function main() {
   await runMigrations()
@@ -226,6 +282,7 @@ async function main() {
   const isStdio = process.argv.includes('--stdio')
 
   if (isStdio) {
+    await autoReconnectIfNeeded(container)
     // Run standard stdio MCP
     await runStdioMcp()
   } else {
