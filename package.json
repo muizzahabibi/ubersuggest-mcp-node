@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "check:migrations-cwd": "node scripts/check-migrations-cwd.mjs",
     "dev": "node --no-warnings --experimental-sqlite --env-file=.env dist/server.js",
     "dev:watch": "tsc -p tsconfig.json --watch",
     "setup": "node install.js",

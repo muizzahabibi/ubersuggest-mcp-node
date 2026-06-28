@@ -1,6 +1,6 @@
 import { createServer } from 'node:http'
 import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, isAbsolute, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { LocalD1Database } from './adapters/localD1.js'
 import { InMemoryLockStore } from './adapters/inMemoryLock.js'
@@ -13,10 +13,11 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { CloudflareBindings } from './config/loadConfig.js'
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = join(__filename, '..')
+const __dirname = dirname(__filename)
+const appRoot = join(__dirname, '..')
 
 // 1. Ensure .env file exists with default dummy keys if not present
-const envPath = join(process.cwd(), '.env')
+const envPath = join(appRoot, '.env')
 if (!existsSync(envPath)) {
   console.error('Generating default .env file...')
   const randomSecret = () => Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2)
@@ -37,12 +38,12 @@ PORT=8787
 
 // 2. Initialize Database and run migrations
 const dbFile = process.env.UBERSUGGEST_DB_FILE || 'ubersuggest.db'
-const dbPath = join(process.cwd(), dbFile)
+const dbPath = isAbsolute(dbFile) ? dbFile : join(appRoot, dbFile)
 console.error(`Initializing SQLite database at: ${dbPath}`)
 const localDb = new LocalD1Database(dbPath)
 
 async function runMigrations() {
-  const migrationsDir = join(process.cwd(), 'migrations')
+  const migrationsDir = join(appRoot, 'migrations')
   if (!existsSync(migrationsDir)) {
     console.error(`Migrations directory not found at: ${migrationsDir}`)
     return
