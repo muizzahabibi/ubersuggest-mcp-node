@@ -11,6 +11,7 @@ import { seoOpportunitiesTool } from '../domain/tools/seoOpportunitiesTool.js'
 import { siteAuditTool } from '../domain/tools/siteAuditTool.js'
 import { subscriptionTool } from '../domain/tools/subscriptionTool.js'
 import { trafficEstimationTool } from '../domain/tools/trafficEstimationTool.js'
+import { expandedTools } from '../domain/tools/expandedTools.js'
 import type { ToolContext } from './container.js'
 import { NotFoundError } from '../utils/errors.js'
 
@@ -18,7 +19,7 @@ export interface ToolDefinition {
   name: string
   description: string
   inputSchema: { parse: (value: unknown) => any }
-  outputSchema: unknown
+  outputSchema?: unknown
   execute: (input: any, context: ToolContext) => Promise<any>
 }
 
@@ -36,6 +37,7 @@ const tools: ToolDefinition[] = [
   siteAuditTool,
   authReconnectTool,
   authLogoutTool,
+  ...expandedTools,
 ]
 
 const toolsByName = new Map(tools.map((tool) => [tool.name, tool]))

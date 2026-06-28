@@ -32,12 +32,24 @@ export class UbersuggestClient {
   ): Promise<ApiRequestResult<T>> {
     const url = buildUrl(this.config.baseUrl, path, options.query)
     let session = await this.sessionResolver.getValidSession(this.sessionId, options.feature)
+    this.logger.info('API request', {
+      method,
+      url,
+      feature: options.feature,
+    })
     let response = await fetch(url, {
       ...buildRequestInit(this.config, session, method, {
         ...options,
         sessionId: this.sessionId,
       }),
       signal: AbortSignal.timeout(this.config.requestTimeoutMs),
+    })
+
+    this.logger.info('API response', {
+      method,
+      url,
+      status: response.status,
+      sessionId: this.sessionId,
     })
 
     if (response.status === 401 || response.status === 403) {

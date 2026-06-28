@@ -11,6 +11,7 @@ import { ProjectsService } from '../domain/services/projectsService.js'
 import { DomainService } from '../domain/services/domainService.js'
 import { KeywordService } from '../domain/services/keywordService.js'
 import { SiteAuditService } from '../domain/services/siteAuditService.js'
+import { RawUbersuggestService } from '../domain/services/rawUbersuggestService.js'
 import { D1SessionStore } from '../adapters/cloudflare/d1SessionStore.js'
 import { D1ReconnectJobStore } from '../adapters/cloudflare/d1ReconnectJobStore.js'
 import { D1AuthBundleStore } from '../adapters/cloudflare/d1AuthBundleStore.js'
@@ -34,6 +35,7 @@ export interface ToolContext {
     domain: DomainService
     keyword: KeywordService
     siteAudit: SiteAuditService
+    raw: RawUbersuggestService
   }
 }
 
@@ -103,6 +105,7 @@ export function createContainer(env: CloudflareBindings): AppContainer {
           domain: new DomainService(client, config.topCountriesLangLocs, config.pollIntervalMs, config.pollTimeoutMs),
           keyword: new KeywordService(client, config.pollIntervalMs, config.pollTimeoutMs),
           siteAudit: new SiteAuditService(client, logger, config.db),
+          raw: new RawUbersuggestService(client),
         },
       }
     },
