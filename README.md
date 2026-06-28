@@ -24,7 +24,7 @@ Perintah ini akan secara otomatis:
 2. Mengkloning repositori ini secara otomatis.
 3. Memasang dependensi Node.js & browser Playwright (Chromium).
 4. Melakukan build TypeScript.
-5. Membuka wizard interaktif untuk mendaftarkan server ke klien MCP pilihan Anda (**Claude Desktop**, **Cursor**, **Claude Code CLI**, **Codex CLI**, atau semuanya!).
+5. Membuka wizard interaktif untuk mendaftarkan server ke klien MCP pilihan Anda (**Claude Desktop**, **Cursor**, **Claude Code CLI**, **Codex CLI**, **Antigravity IDE/CLI**, atau semuanya!).
 
 Jika Anda sudah mengkloning repositori ini secara manual, Anda bisa menjalankan konfigurasi interaktif langsung dari dalam folder proyek dengan perintah:
 
@@ -80,6 +80,28 @@ args = ["--experimental-sqlite", "--env-file=/PATH/TO/ubersuggest-mcp-node/.env"
 ```
 
 Gunakan nama `ubersuggest_node` agar bisa berjalan berdampingan dengan MCP Ubersuggest HTTP/remote lain.
+
+### 4. Antigravity IDE/CLI
+
+Wizard `npm run setup` dapat mengonfigurasi Antigravity otomatis. Jika ingin manual, tambahkan blok berikut ke `~/.gemini/config/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ubersuggest_node": {
+      "command": "node",
+      "args": [
+        "--experimental-sqlite",
+        "--env-file=/PATH/TO/ubersuggest-mcp-node/.env",
+        "/PATH/TO/ubersuggest-mcp-node/dist/server.js",
+        "--stdio"
+      ]
+    }
+  }
+}
+```
+
+Untuk config per-project Antigravity, gunakan isi yang sama di `.agents/mcp_config.json`.
 
 ---
 

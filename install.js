@@ -132,6 +132,31 @@ async function installCodexCli() {
   }
 }
 
+async function installAntigravity() {
+  const configPath = path.join(os.homedir(), '.gemini', 'config', 'mcp_config.json');
+
+  try {
+    let config = { mcpServers: {} };
+    if (fs.existsSync(configPath)) {
+      const content = fs.readFileSync(configPath, 'utf8').trim();
+      if (content) {
+        config = JSON.parse(content);
+      }
+    } else {
+      fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    }
+
+    config.mcpServers = config.mcpServers || {};
+    config.mcpServers[mcpServerName] = getStdioConfig();
+
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    console.log(`\x1b[32m✅ Berhasil didaftarkan di Antigravity IDE/CLI!\x1b[0m`);
+    console.log(`File konfigurasi diperbarui: ${configPath}\n`);
+  } catch (err) {
+    console.error('\x1b[31m❌ Gagal mendaftarkan di Antigravity IDE/CLI:\x1b[0m', err.message);
+  }
+}
+
 function printCursorGuide() {
   console.log('\x1b[36m=== Petunjuk Setup untuk Cursor ===\x1b[0m');
   console.log('1. Buka Cursor Settings -> Features -> MCP.');
@@ -155,10 +180,11 @@ async function main() {
   console.log(' [2] Cursor IDE (Tampilkan petunjuk manual)');
   console.log(' [3] Claude Code CLI (Konfigurasi otomatis project saat ini)');
   console.log(' [4] Codex CLI (Konfigurasi otomatis)');
-  console.log(' [5] Semua (Konfigurasikan semua di atas)');
-  console.log(' [6] Keluar');
+  console.log(' [5] Antigravity IDE/CLI (Konfigurasi otomatis)');
+  console.log(' [6] Semua (Konfigurasikan semua di atas)');
+  console.log(' [7] Keluar');
 
-  const choice = await rl.question('\nMasukkan pilihan Anda (1-6): ');
+  const choice = await rl.question('\nMasukkan pilihan Anda (1-7): ');
   rl.close();
 
   console.log('');
@@ -177,12 +203,16 @@ async function main() {
       await installCodexCli();
       break;
     case '5':
+      await installAntigravity();
+      break;
+    case '6':
       await installClaudeDesktop();
       await installClaudeCode();
       await installCodexCli();
+      await installAntigravity();
       printCursorGuide();
       break;
-    case '6':
+    case '7':
       console.log('Instalasi dibatalkan.');
       process.exit(0);
       break;
